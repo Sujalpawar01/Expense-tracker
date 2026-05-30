@@ -35,6 +35,10 @@ app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/categories', require('./routes/categories'));
 
 // Health check
+app.get('/', (req, res) => {
+  res.json({ status: 'OK', message: 'Expense Tracker API is running' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Expense Tracker API is running' });
 });
