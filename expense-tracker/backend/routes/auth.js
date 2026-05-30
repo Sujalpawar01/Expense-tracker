@@ -4,24 +4,16 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
-require('dotenv').config(); // ✅ ensure env is loaded
 
-// ✅ safer token generator with check
 const generateToken = (id) => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in .env");
-  }
-
-  return jwt.sign(
-    { id },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_EXPIRE || '7d'
-    }
-  );
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE || '7d'
+  });
 };
 
 // @route   POST /api/auth/register
+// @desc    Register a new user
+// @access  Public
 router.post(
   '/register',
   [
@@ -32,7 +24,6 @@ router.post(
       .withMessage('Password must be at least 6 characters')
   ],
   async (req, res) => {
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: errors.array()[0].msg });
@@ -47,7 +38,6 @@ router.post(
       }
 
       const user = await User.create({ name, email, password });
-
       const token = generateToken(user._id);
 
       res.status(201).json({
@@ -60,15 +50,16 @@ router.post(
           monthlyBudget: user.monthlyBudget
         }
       });
-
     } catch (error) {
-      console.error("Register Error:", error.message);
-      res.status(500).json({ message: error.message || 'Server error' });
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
 
 // @route   POST /api/auth/login
+// @desc    Login user
+// @access  Public
 router.post(
   '/login',
   [
@@ -76,7 +67,6 @@ router.post(
     body('password').notEmpty().withMessage('Password is required')
   ],
   async (req, res) => {
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: errors.array()[0].msg });
@@ -107,15 +97,16 @@ router.post(
           monthlyBudget: user.monthlyBudget
         }
       });
-
     } catch (error) {
-      console.error("Login Error:", error.message);
-      res.status(500).json({ message: error.message || 'Server error' });
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
 
 // @route   GET /api/auth/me
+// @desc    Get current user
+// @access  Private
 router.get('/me', protect, async (req, res) => {
   res.json({
     user: {
@@ -129,16 +120,16 @@ router.get('/me', protect, async (req, res) => {
 });
 
 // @route   PUT /api/auth/profile
+// @desc    Update user profile
+// @access  Private
 router.put('/profile', protect, async (req, res) => {
   try {
     const { name, currency, monthlyBudget } = req.body;
-
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { name, currency, monthlyBudget },
       { new: true, runValidators: true }
     );
-
     res.json({
       user: {
         id: user._id,
@@ -148,9 +139,7 @@ router.put('/profile', protect, async (req, res) => {
         monthlyBudget: user.monthlyBudget
       }
     });
-
   } catch (error) {
-    console.error("Profile Update Error:", error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

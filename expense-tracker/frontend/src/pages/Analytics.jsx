@@ -129,10 +129,10 @@ export default function Analytics() {
       {barData && (
         <div className="card" style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>Spending by Category</h3>
-          <Bar data={barData} options={{ ...chartDefaults, responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }} height={100} />
+          <Bar data={barData} options={{ ...chartDefaults, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} height={200} />
         </div>
       )}
- 
+
       {!doughnutData && (
         <div className="card" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📈</div>
