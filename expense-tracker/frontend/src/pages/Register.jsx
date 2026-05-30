@@ -4,6 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { MdAccountBalanceWallet, MdEmail, MdLock, MdPerson } from 'react-icons/md';
 
+function Field({ label, icon: Icon, ...props }) {
+  return (
+    <div className="form-group">
+      <label className="label">{label}</label>
+      <div style={{ position: 'relative' }}>
+        <Icon style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+        <input className="input" style={{ paddingLeft: '2.5rem' }} {...props} />
+      </div>
+    </div>
+  );
+}
+
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
@@ -29,16 +41,6 @@ export default function Register() {
       setLoading(false);
     }
   };
-
-  const Field = ({ label, icon: Icon, ...props }) => (
-    <div className="form-group">
-      <label className="label">{label}</label>
-      <div style={{ position: 'relative' }}>
-        <Icon style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-        <input className="input" style={{ paddingLeft: '2.5rem' }} {...props} />
-      </div>
-    </div>
-  );
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'var(--bg)' }}>
