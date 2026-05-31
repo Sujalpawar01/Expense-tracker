@@ -2,6 +2,10 @@
 SpendWise is a production-ready, full-stack expense tracking web application built as a Round 2 submission for a Full Stack Developer role. It demonstrates real-world engineering skills including secure authentication, database design, REST API development, and a polished React frontend with data visualization.
 Users can register securely, log transactions (income & expenses), view analytics charts, and manage their financial profile — all in a sleek dark-themed interface.
 
+Live Project 
+ https://expense-tracker-amber-delta-54.vercel.app
+
+
 ✨ Features
 Authentication & Security
 •	User registration and login with JWT (JSON Web Tokens)
