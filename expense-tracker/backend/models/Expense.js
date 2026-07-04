@@ -56,8 +56,12 @@ const expenseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Index for faster queries
-expenseSchema.index({ user: 1, date: -1 });
-expenseSchema.index({ user: 1, category: 1 });
+// Optimized indexes for fast query performance across large datasets
+expenseSchema.index({ user: 1, date: -1 });               // default list sort
+expenseSchema.index({ user: 1, category: 1 });             // category filter
+expenseSchema.index({ user: 1, type: 1, date: -1 });       // type + date filter
+expenseSchema.index({ user: 1, category: 1, date: -1 });   // category + date range
+expenseSchema.index({ user: 1, date: -1, type: 1, category: 1 }); // compound for aggregation
+expenseSchema.index({ title: 'text' });                    // full-text search on title
 
 module.exports = mongoose.model('Expense', expenseSchema);
