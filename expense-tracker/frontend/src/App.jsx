@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
+import Goals from './pages/Goals';
 import Layout from './components/Layout';
 
 const PrivateRoute = ({ children }) => {
@@ -35,6 +36,7 @@ function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="goals" element={<Goals />} />
         <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>

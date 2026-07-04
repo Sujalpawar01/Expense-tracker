@@ -1,12 +1,13 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MdDashboard, MdReceipt, MdBarChart, MdPerson, MdLogout, MdAccountBalanceWallet } from 'react-icons/md';
+import { MdDashboard, MdReceipt, MdBarChart, MdPerson, MdLogout, MdAccountBalanceWallet, MdFlag } from 'react-icons/md';
 
 const navItems = [
-  { to: '/dashboard', icon: MdDashboard, label: 'Dashboard' },
-  { to: '/transactions', icon: MdReceipt, label: 'Transactions' },
-  { to: '/analytics', icon: MdBarChart, label: 'Analytics' },
-  { to: '/profile', icon: MdPerson, label: 'Profile' }
+  { to: '/dashboard',    icon: MdDashboard, label: 'Dashboard' },
+  { to: '/transactions', icon: MdReceipt,   label: 'Transactions' },
+  { to: '/analytics',   icon: MdBarChart,   label: 'Analytics' },
+  { to: '/goals',       icon: MdFlag,       label: 'Goals' },
+  { to: '/profile',     icon: MdPerson,     label: 'Profile' }
 ];
 
 export default function Layout() {
