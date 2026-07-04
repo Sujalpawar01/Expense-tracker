@@ -3,8 +3,8 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Expense = require('../models/Expense');
 const { protect } = require('../middleware/auth');
-require('dotenv').config(); // ✅ ensure env is loaded
 
 // ✅ safer token generator with check
 const generateToken = (id) => {
@@ -151,6 +151,63 @@ router.put('/profile', protect, async (req, res) => {
 
   } catch (error) {
     console.error("Profile Update Error:", error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/auth/achievements
+// @desc    Compute and return achievement badges from user's data
+// @access  Private
+router.get('/achievements', protect, async (req, res) => {
+  try {
+    const now = new Date();
+    const currStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevEnd   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(now.getMonth() - 5); sixMonthsAgo.setDate(1);
+
+    const [currSummary, prevSummary, totalCount, distinctMonths] = await Promise.all([
+      Expense.aggregate([
+        { $match: { user: req.user._id, date: { $gte: currStart, $lte: currEnd } } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } }
+      ]),
+      Expense.aggregate([
+        { $match: { user: req.user._id, date: { $gte: prevStart, $lte: prevEnd } } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } }
+      ]),
+      Expense.countDocuments({ user: req.user._id }),
+      Expense.aggregate([
+        { $match: { user: req.user._id, date: { $gte: sixMonthsAgo } } },
+        { $group: { _id: { year: { $year: '$date' }, month: { $month: '$date' } } } },
+        { $count: 'months' }
+      ])
+    ]);
+
+    const currIncome  = currSummary.find(d => d._id === 'income')?.total  || 0;
+    const currExpense = currSummary.find(d => d._id === 'expense')?.total || 0;
+    const prevIncome  = prevSummary.find(d => d._id === 'income')?.total  || 0;
+    const prevExpense = prevSummary.find(d => d._id === 'expense')?.total || 0;
+    const savingsRate = currIncome > 0 ? ((currIncome - currExpense) / currIncome) * 100 : 0;
+    const months      = distinctMonths[0]?.months || 0;
+
+    const allAchievements = [
+      { id: 'first_step',     icon: '🚀', title: 'First Step',        desc: 'Log your very first transaction',                 unlocked: totalCount >= 1 },
+      { id: 'transaction_10', icon: '📝', title: 'Getting Serious',   desc: 'Log 10 or more transactions',                    unlocked: totalCount >= 10 },
+      { id: 'transaction_50', icon: '📚', title: 'Power Tracker',     desc: 'Log 50 or more transactions',                    unlocked: totalCount >= 50 },
+      { id: 'saver_20',       icon: '💰', title: 'Saver',             desc: 'Save 20% or more of income this month',          unlocked: savingsRate >= 20 },
+      { id: 'saver_30',       icon: '🏅', title: 'Super Saver',       desc: 'Save 30% or more of income this month',          unlocked: savingsRate >= 30 },
+      { id: 'no_overspend',   icon: '🎯', title: 'Budget Master',     desc: 'Spend less than you earned this month',           unlocked: currIncome > 0 && currExpense < currIncome },
+      { id: 'less_than_prev', icon: '📉', title: 'Cutting Back',      desc: 'Spend less this month than last month',           unlocked: prevExpense > 0 && currExpense < prevExpense },
+      { id: 'streak_3',       icon: '🔥', title: '3-Month Streak',    desc: 'Track expenses for 3 consecutive months',         unlocked: months >= 3 },
+      { id: 'streak_6',       icon: '⚡', title: '6-Month Streak',    desc: 'Track expenses for 6 consecutive months',         unlocked: months >= 6 },
+      { id: 'income_logged',  icon: '💼', title: 'Income Tracker',    desc: 'Log at least one income transaction this month',  unlocked: currIncome > 0 },
+    ];
+
+    const unlocked = allAchievements.filter(a => a.unlocked).length;
+    res.json({ achievements: allAchievements, unlocked, total: allAchievements.length });
+  } catch (err) {
+    console.error('Achievements error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
