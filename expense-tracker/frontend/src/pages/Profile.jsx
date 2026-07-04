@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
@@ -16,6 +16,11 @@ export default function Profile() {
   const { user, updateUser } = useAuth();
   const [form, setForm] = useState({ name: user?.name || '', currency: user?.currency || 'INR', monthlyBudget: user?.monthlyBudget || '' });
   const [loading, setLoading] = useState(false);
+  const [achievements, setAchievements] = useState(null);
+
+  useEffect(() => {
+    api.get('/auth/achievements').then(({ data }) => setAchievements(data)).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,6 +98,32 @@ export default function Profile() {
             </button>
           </form>
         </div>
+
+        {/* Achievements */}
+        {achievements && (
+          <div className="card" style={{ marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1rem' }}>🏆 Achievements</h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-light)', fontWeight: 600 }}>
+                {achievements.unlocked}/{achievements.total} unlocked
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div style={{ height: 6, background: 'var(--bg-elevated)', borderRadius: 3, overflow: 'hidden', marginBottom: '1.2rem' }}>
+              <div style={{ height: '100%', width: `${Math.round((achievements.unlocked / achievements.total) * 100)}%`, background: 'linear-gradient(90deg, var(--accent), var(--green))', borderRadius: 3, transition: 'width 1s ease' }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.75rem' }}>
+              {achievements.achievements.map(a => (
+                <div key={a.id} style={{ padding: '0.9rem', borderRadius: 'var(--radius-sm)', border: `1px solid ${a.unlocked ? 'rgba(124,106,247,0.35)' : 'var(--border)'}`, background: a.unlocked ? 'rgba(124,106,247,0.07)' : 'var(--bg-elevated)', opacity: a.unlocked ? 1 : 0.5, transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}>
+                  {a.unlocked && <div style={{ position: 'absolute', top: 4, right: 6, fontSize: '0.6rem', color: 'var(--green)', fontWeight: 700 }}>✓</div>}
+                  <div style={{ fontSize: '1.6rem', marginBottom: '0.4rem' }}>{a.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.2rem', fontFamily: 'var(--font-display)' }}>{a.title}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>{a.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Info Card */}
         <div className="card" style={{ marginTop: '1.5rem', borderColor: 'rgba(124,106,247,0.3)', background: 'rgba(124,106,247,0.05)' }}>
