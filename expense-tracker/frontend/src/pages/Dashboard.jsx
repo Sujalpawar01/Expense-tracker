@@ -5,7 +5,7 @@ import api from '../utils/api';
 import { format } from 'date-fns';
 import { MdTrendingUp, MdTrendingDown, MdAccountBalance, MdSwapHoriz, MdAdd, MdArrowForward, MdWarning, MdFlag } from 'react-icons/md';
 
-const CATEGORY_ICONS = { 'Food & Dining':'🍔','Transportation':'🚗','Shopping':'🛍️','Entertainment':'🎬','Healthcare':'🏥','Housing':'🏠','Education':'📚','Utilities':'💡','Travel':'✈️','Salary':'💼','Freelance':'💻','Investment':'📈','Other':'📦' };
+const CATEGORY_ICONS = { 'Food & Dining':'🍔','Transportation':'🚗','Shopping':'🛍️','Entertainment':'🎬','Healthcare':'🏥','Housing':'🏠','Education':'📚','Utilities':'💡','Travel':'✈️','Salary':'💼','Freelance':'💻','Development':'📈','Other':'📦' };
 
 function StatCard({ label, value, icon: Icon, color, subtitle, trend }) {
   return (
