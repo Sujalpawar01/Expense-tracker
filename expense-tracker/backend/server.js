@@ -20,29 +20,36 @@ if (!process.env.MONGO_URI) {
 const app = express();
 
 // CORS: support multiple allowed origins (comma-separated CLIENT_URL)
-// Also auto-allows all *.vercel.app preview deployments
+// Also auto-allows ALL *.vercel.app subdomains (any depth, any branch preview)
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map(o => o.trim());
 
 const isAllowedOrigin = (origin) => {
-  if (!origin) return true; // Allow non-browser requests (Postman, curl, mobile)
+  if (!origin) return true; // non-browser (Postman, curl, mobile)
   if (allowedOrigins.includes(origin)) return true;
-  // Auto-allow all Vercel preview/production deployments
-  if (/^https:\/\/[a-zA-Z0-9\-]+\.vercel\.app$/.test(origin)) return true;
+  // Allow any vercel.app subdomain (handles preview + production URLs)
+  if (origin.endsWith('.vercel.app')) return true;
+  // Allow localhost on any port for local dev
+  if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return true;
   return false;
 };
 
+// Must be registered BEFORE routes so preflight OPTIONS requests get CORS headers
 app.use(cors({
   origin: (origin, callback) => {
-    if (isAllowedOrigin(origin)) {
-      return callback(null, true);
-    }
+    if (isAllowedOrigin(origin)) return callback(null, true);
     console.warn(`🚫 CORS blocked: ${origin}`);
     callback(new Error(`CORS: origin ${origin} is not allowed`));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Explicitly handle OPTIONS preflight for all routes
+app.options('*', cors());
+
 app.use(express.json());
 
 // Routes
