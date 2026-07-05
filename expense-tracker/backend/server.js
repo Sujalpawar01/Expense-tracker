@@ -19,16 +19,26 @@ if (!process.env.MONGO_URI) {
 
 const app = express();
 
-// CORS: support multiple allowed origins (comma-separated CLIENT_URL for deployment)
+// CORS: support multiple allowed origins (comma-separated CLIENT_URL)
+// Also auto-allows all *.vercel.app preview deployments
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map(o => o.trim());
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Allow non-browser requests (Postman, curl, mobile)
+  if (allowedOrigins.includes(origin)) return true;
+  // Auto-allow all Vercel preview/production deployments
+  if (/^https:\/\/[a-zA-Z0-9\-]+\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`🚫 CORS blocked: ${origin}`);
     callback(new Error(`CORS: origin ${origin} is not allowed`));
   },
   credentials: true
