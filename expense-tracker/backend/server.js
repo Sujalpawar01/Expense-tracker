@@ -2,28 +2,34 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 
-dotenv.config();
+// Load .env from backend directory explicitly
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// ✅ Validate critical environment variables at startup
+if (!process.env.JWT_SECRET) {
+  console.error('❌ FATAL: JWT_SECRET is not defined in .env — server cannot start');
+  process.exit(1);
+}
+if (!process.env.MONGO_URI) {
+  console.error('❌ FATAL: MONGO_URI is not defined in .env — server cannot start');
+  process.exit(1);
+}
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://expense-tracker-amber-delta-54.vercel.app',
-  ...(process.env.CLIENT_URL || '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-];
+// CORS: support multiple allowed origins (comma-separated CLIENT_URL for deployment)
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map(o => o.trim());
 
-// Middleware
 app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error(`CORS blocked origin: ${origin}`));
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} is not allowed`));
   },
   credentials: true
 }));
@@ -33,6 +39,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/categories', require('./routes/categories'));
+app.use('/api/goals', require('./routes/goals'));
 
 // Health check
 app.get('/', (req, res) => {
@@ -40,7 +47,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Expense Tracker API is running' });
+  res.json({
+    status: 'OK',
+    message: 'Expense Tracker API is running',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Error handling middleware
@@ -56,6 +67,8 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
+    console.log(`🔐 JWT auth enabled (expires: ${process.env.JWT_EXPIRE || '7d'})`);
+    console.log(`🌐 CORS allowed origins: ${allowedOrigins.join(', ')}`);
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => {

@@ -13,19 +13,29 @@ const protect = async (req, res, next) => {
     }
 
     if (!token) {
-      return res.status(401).json({ message: 'Not authorized, no token' });
+      return res.status(401).json({ message: 'Not authorized, no token', code: 'NO_TOKEN' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      if (jwtError.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Session expired, please log in again', code: 'TOKEN_EXPIRED' });
+      }
+      return res.status(401).json({ message: 'Invalid token, please log in again', code: 'INVALID_TOKEN' });
+    }
+
     req.user = await User.findById(decoded.id).select('-password');
 
     if (!req.user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({ message: 'User account not found', code: 'USER_NOT_FOUND' });
     }
 
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Not authorized, token failed' });
+    console.error('Auth middleware error:', error.message);
+    return res.status(401).json({ message: 'Authentication failed', code: 'AUTH_ERROR' });
   }
 };
 
